@@ -1,0 +1,6 @@
+{
+  "name": "ECHO — Second Brain",
+  "description": "SATURN: Your second brain. An encrypted neural vault and knowledge architecture over an organic molten particle landscape.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

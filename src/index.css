@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@layer base {
+  html, body, #root {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #0D0908;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+}
+
+.saturn-login-card {
+  background:
+    linear-gradient(
+      160deg,
+      rgba(255, 248, 225, 0.028) 0%,
+      rgba(255, 245, 220, 0.010) 45%,
+      rgba(247, 215, 148, 0.007) 75%,
+      rgba(235, 175, 80, 0.008) 100%
+    ),
+    rgba(14, 11, 10, 0.08);
+
+  -webkit-backdrop-filter: blur(14px) saturate(112%);
+  backdrop-filter: blur(14px) saturate(112%);
+
+  border: 1px solid rgba(255, 235, 195, 0.14);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 225, 0.14),
+    inset 0 -1px 0 rgba(255, 215, 148, 0.04),
+    0 16px 45px rgba(0, 0, 0, 0.18);
+}
+
+.saturn-glass-input {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 235, 195, 0.13);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.saturn-glass-input:hover:not(:disabled) {
+  border-color: rgba(255, 235, 195, 0.22);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.saturn-glass-input:focus {
+  outline: none;
+  border-color: rgba(247, 215, 148, 0.55);
+  box-shadow: 0 0 0 2px rgba(247, 215, 148, 0.18), inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.saturn-glass-input[aria-invalid="true"] {
+  border-color: rgba(248, 113, 113, 0.55);
+}
+
+.saturn-glass-input[aria-invalid="true"]:focus {
+  border-color: rgba(248, 113, 113, 0.75);
+  box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.22), inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.saturn-toast {
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 246, 222, 0.04),
+      rgba(255, 246, 222, 0.01) 48%,
+      rgba(255, 155, 45, 0.02)
+    ),
+    rgba(12, 10, 9, 0.75);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 235, 195, 0.20);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 248, 225, 0.12),
+    0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
