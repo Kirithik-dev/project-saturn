@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Check, AlertCircle } from 'lucide-react';
 import { SaturnToast } from './SaturnToast';
+import { useAuth } from '../../context/AuthContext';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 interface FormErrors {
   name?: string;
@@ -10,7 +12,16 @@ interface FormErrors {
 }
 
 export function SaturnLogin() {
-  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
+  const {
+    isRecoveryMode,
+    signInWithEmail,
+    signUpWithEmail,
+    signInWithGoogle,
+    sendPasswordReset,
+    updateUserPassword
+  } = useAuth();
+
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot' | 'reset-password'>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -20,13 +31,32 @@ export function SaturnLogin() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  // Success toast is prepared for future authentication integration (inactive by default)
-  const [isSuccessToastOpen, setIsSuccessToastOpen] = useState(false);
+  // Toast feedback state
+  const [toastConfig, setToastConfig] = useState<{
+    isOpen: boolean;
+    heading: string;
+    supportingText: string;
+    type: 'success' | 'info' | 'error';
+  }>({
+    isOpen: false,
+    heading: 'Welcome to SATURN',
+    supportingText: 'Your second brain is ready.',
+    type: 'success'
+  });
+
+  // Switch to reset-password mode automatically when a recovery link is opened
+  useEffect(() => {
+    if (isRecoveryMode) {
+      setMode('reset-password');
+      setApiError(null);
+    }
+  }, [isRecoveryMode]);
 
   const validateField = (field: string, value: string): string | undefined => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (field === 'email') {
+    if (field === 'email' && mode !== 'reset-password') {
       if (!value.trim()) return 'Email address is required';
       if (!emailRegex.test(value.trim())) return 'Please enter a valid email address';
     }
@@ -37,7 +67,7 @@ export function SaturnLogin() {
     if (field === 'name' && mode === 'signup') {
       if (!value.trim()) return 'Full name is required';
     }
-    if (field === 'confirmPassword' && mode === 'signup') {
+    if (field === 'confirmPassword' && (mode === 'signup' || mode === 'reset-password')) {
       if (!value) return 'Please confirm your password';
       if (value !== password) return 'Passwords do not match';
     }
@@ -52,8 +82,11 @@ export function SaturnLogin() {
 
   const validateAll = (): boolean => {
     const errs: FormErrors = {};
-    const emailErr = validateField('email', email);
-    if (emailErr) errs.email = emailErr;
+
+    if (mode !== 'reset-password') {
+      const emailErr = validateField('email', email);
+      if (emailErr) errs.email = emailErr;
+    }
 
     if (mode !== 'forgot') {
       const passErr = validateField('password', password);
@@ -63,7 +96,9 @@ export function SaturnLogin() {
     if (mode === 'signup') {
       const nameErr = validateField('name', name);
       if (nameErr) errs.name = nameErr;
+    }
 
+    if (mode === 'signup' || mode === 'reset-password') {
       const confirmErr = validateField('confirmPassword', confirmPassword);
       if (confirmErr) errs.confirmPassword = confirmErr;
     }
@@ -78,35 +113,123 @@ export function SaturnLogin() {
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
     if (!validateAll() || isLoading) return;
 
-    // Display understated loading state during submission to prevent duplicate actions
     setIsLoading(true);
-    setTimeout(() => {
+
+    try {
+      if (mode === 'signin') {
+        const { error } = await signInWithEmail(email, password, rememberMe);
+        if (error) {
+          let friendlyMessage = error.message;
+          if (error.message.toLowerCase().includes('invalid login credentials')) {
+            friendlyMessage = 'Invalid email or password. Please verify your credentials.';
+          } else if (error.message.toLowerCase().includes('email not confirmed')) {
+            friendlyMessage = 'Email address not yet confirmed. Please check your inbox.';
+          } else if (!isSupabaseConfigured()) {
+            friendlyMessage = 'Supabase placeholder active. Configure VITE_SUPABASE_URL and key in .env.local to authenticate.';
+          }
+          setApiError(friendlyMessage);
+        } else {
+          setToastConfig({
+            isOpen: true,
+            heading: 'Welcome to SATURN',
+            supportingText: 'Your second brain is ready.',
+            type: 'success'
+          });
+        }
+      } else if (mode === 'signup') {
+        const { error, needsEmailConfirmation } = await signUpWithEmail(email, password, name);
+        if (error) {
+          let friendlyMessage = error.message;
+          if (error.message.toLowerCase().includes('already registered')) {
+            friendlyMessage = 'An account with this email address already exists.';
+          }
+          setApiError(friendlyMessage);
+        } else if (needsEmailConfirmation) {
+          setToastConfig({
+            isOpen: true,
+            heading: 'Verification Email Dispatched',
+            supportingText: `Confirmation link sent to ${email}. Verify your inbox to activate your vault.`,
+            type: 'info'
+          });
+          setMode('signin');
+          setPassword('');
+          setConfirmPassword('');
+        } else {
+          setToastConfig({
+            isOpen: true,
+            heading: 'Vault Initialized',
+            supportingText: 'Welcome to SATURN. Your private workspace is active.',
+            type: 'success'
+          });
+        }
+      } else if (mode === 'forgot') {
+        const { error } = await sendPasswordReset(email);
+        if (error) {
+          setApiError(error.message);
+        } else {
+          setToastConfig({
+            isOpen: true,
+            heading: 'Recovery Link Dispatched',
+            supportingText: `Password reset instructions have been sent to ${email}.`,
+            type: 'info'
+          });
+          setMode('signin');
+        }
+      } else if (mode === 'reset-password') {
+        const { error } = await updateUserPassword(password);
+        if (error) {
+          setApiError(error.message);
+        } else {
+          setToastConfig({
+            isOpen: true,
+            heading: 'Password Renewed',
+            supportingText: 'Your credentials have been securely updated.',
+            type: 'success'
+          });
+          setMode('signin');
+          setPassword('');
+          setConfirmPassword('');
+        }
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'An authentication error occurred';
+      setApiError(errorMessage);
+    } finally {
       setIsLoading(false);
-      // Authentication integration pending in downstream task
-    }, 850);
+    }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     if (isLoading) return;
     setIsLoading(true);
-    setTimeout(() => {
+    setApiError(null);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setApiError(error.message || 'Google OAuth could not be initiated. Check Supabase Provider configuration.');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Google OAuth failed';
+      setApiError(errorMessage);
+    } finally {
       setIsLoading(false);
-      // Google OAuth integration pending in downstream task
-    }, 750);
+    }
   };
 
   return (
     <>
-      {/* SaturnToast component prepared for future authentication integration */}
+      {/* SaturnToast component providing accessible feedback */}
       <SaturnToast
-        isOpen={isSuccessToastOpen}
-        heading="Welcome to SATURN"
-        supportingText="Your second brain is ready."
-        onClose={() => setIsSuccessToastOpen(false)}
+        isOpen={toastConfig.isOpen}
+        heading={toastConfig.heading}
+        supportingText={toastConfig.supportingText}
+        type={toastConfig.type}
+        onClose={() => setToastConfig((prev) => ({ ...prev, isOpen: false }))}
       />
 
       {/* Main Centered Login Screen with responsive padding and scroll allowance */}
@@ -204,7 +327,7 @@ export function SaturnLogin() {
                 YOUR SECOND BRAIN.
               </p>
 
-              {/* Auxiliary Mode Headings (Sign Up & Forgot Password only) */}
+              {/* Auxiliary Mode Headings */}
               {mode === 'signup' && (
                 <div className="mt-3">
                   <h1 className="text-lg font-semibold text-[#F5F0E5] tracking-tight">
@@ -226,7 +349,26 @@ export function SaturnLogin() {
                   </p>
                 </div>
               )}
+
+              {mode === 'reset-password' && (
+                <div className="mt-3">
+                  <h1 className="text-lg font-semibold text-[#F5F0E5] tracking-tight">
+                    Set new password.
+                  </h1>
+                  <p className="text-xs text-[#E0D8CC]/70 mt-0.5 max-w-[280px] leading-relaxed">
+                    Enter your updated credentials to restore your vault.
+                  </p>
+                </div>
+              )}
             </header>
+
+            {/* General API Error Alert */}
+            {apiError && (
+              <div className="mb-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[#F87171] text-xs flex items-start gap-2" role="alert">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span className="leading-snug flex-1">{apiError}</span>
+              </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} noValidate className="space-y-1">
@@ -270,51 +412,53 @@ export function SaturnLogin() {
                 </div>
               )}
 
-              {/* Email Address */}
-              <div>
-                <label htmlFor="saturn-email" className="block text-xs font-medium text-[#F5F0E5]/80 mb-1.5">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
-                    <Mail className="w-4 h-4" aria-hidden="true" />
+              {/* Email Address (Sign In, Sign Up, Forgot) */}
+              {mode !== 'reset-password' && (
+                <div>
+                  <label htmlFor="saturn-email" className="block text-xs font-medium text-[#F5F0E5]/80 mb-1.5">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
+                      <Mail className="w-4 h-4" aria-hidden="true" />
+                    </div>
+                    <input
+                      id="saturn-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (touched.email) {
+                          setErrors((prev) => ({ ...prev, email: validateField('email', e.target.value) }));
+                        }
+                      }}
+                      onBlur={() => handleBlur('email', email)}
+                      disabled={isLoading}
+                      aria-invalid={touched.email && !!errors.email}
+                      aria-describedby="email-error"
+                      placeholder="name@domain.com"
+                      autoComplete="email"
+                      className="w-full h-10.5 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
+                    />
                   </div>
-                  <input
-                    id="saturn-email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      if (touched.email) {
-                        setErrors((prev) => ({ ...prev, email: validateField('email', e.target.value) }));
-                      }
-                    }}
-                    onBlur={() => handleBlur('email', email)}
-                    disabled={isLoading}
-                    aria-invalid={touched.email && !!errors.email}
-                    aria-describedby="email-error"
-                    placeholder="name@domain.com"
-                    autoComplete="email"
-                    className="w-full h-10.5 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
-                  />
+                  {/* Stable reserved error space to prevent vertical layout shift */}
+                  <div id="email-error" className="h-5 flex items-center" aria-live="polite">
+                    {touched.email && errors.email ? (
+                      <p className="text-[11px] text-[#F87171] flex items-center gap-1 transition-opacity duration-150">
+                        <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
+                        <span>{errors.email}</span>
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                {/* Stable reserved error space to prevent vertical layout shift */}
-                <div id="email-error" className="h-5 flex items-center" aria-live="polite">
-                  {touched.email && errors.email ? (
-                    <p className="text-[11px] text-[#F87171] flex items-center gap-1 transition-opacity duration-150">
-                      <AlertCircle className="w-3 h-3 shrink-0" aria-hidden="true" />
-                      <span>{errors.email}</span>
-                    </p>
-                  ) : null}
-                </div>
-              </div>
+              )}
 
-              {/* Password Input (Sign In & Sign Up) */}
+              {/* Password Input (Sign In, Sign Up, Reset-Password) */}
               {mode !== 'forgot' && (
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label htmlFor="saturn-password" className="text-xs font-medium text-[#F5F0E5]/80">
-                      Password
+                      {mode === 'reset-password' ? 'New Password' : 'Password'}
                     </label>
                   </div>
                   <div className="relative">
@@ -365,8 +509,8 @@ export function SaturnLogin() {
                 </div>
               )}
 
-              {/* Confirm Password (Sign Up only) */}
-              {mode === 'signup' && (
+              {/* Confirm Password (Sign Up & Reset-Password) */}
+              {(mode === 'signup' || mode === 'reset-password') && (
                 <div>
                   <label htmlFor="saturn-confirm-password" className="block text-xs font-medium text-[#F5F0E5]/80 mb-1.5">
                     Confirm Password
@@ -430,6 +574,7 @@ export function SaturnLogin() {
                     type="button"
                     onClick={() => {
                       setMode('forgot');
+                      setApiError(null);
                       setErrors({});
                       setTouched({});
                     }}
@@ -459,6 +604,7 @@ export function SaturnLogin() {
                       {mode === 'signin' && 'Sign in to SATURN'}
                       {mode === 'signup' && 'Create Account'}
                       {mode === 'forgot' && 'Send Reset Instructions'}
+                      {mode === 'reset-password' && 'Update Password'}
                     </span>
                     <ArrowRight className="w-4 h-4 text-[#120B06]" aria-hidden="true" />
                   </>
@@ -466,8 +612,8 @@ export function SaturnLogin() {
               </button>
             </form>
 
-            {/* Social Auth & Mode Switchers */}
-            {mode !== 'forgot' && (
+            {/* Social Auth & Mode Switchers (Not shown in reset-password or forgot) */}
+            {mode !== 'forgot' && mode !== 'reset-password' && (
               <>
                 {/* Clean Non-Pill Divider */}
                 <div className="my-3.5 flex items-center gap-3" aria-hidden="true">
@@ -517,6 +663,7 @@ export function SaturnLogin() {
                     type="button"
                     onClick={() => {
                       setMode('signup');
+                      setApiError(null);
                       setErrors({});
                       setTouched({});
                     }}
@@ -535,6 +682,7 @@ export function SaturnLogin() {
                     type="button"
                     onClick={() => {
                       setMode('signin');
+                      setApiError(null);
                       setErrors({});
                       setTouched({});
                     }}
@@ -546,13 +694,14 @@ export function SaturnLogin() {
                 </p>
               )}
 
-              {mode === 'forgot' && (
+              {(mode === 'forgot' || mode === 'reset-password') && (
                 <p>
                   <span>Remember your credentials?</span>{' '}
                   <button
                     type="button"
                     onClick={() => {
                       setMode('signin');
+                      setApiError(null);
                       setErrors({});
                       setTouched({});
                     }}

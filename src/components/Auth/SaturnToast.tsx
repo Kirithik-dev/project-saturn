@@ -5,19 +5,21 @@ export interface SaturnToastProps {
   isOpen?: boolean;
   heading?: string;
   supportingText?: string;
+  type?: 'success' | 'info' | 'error';
   onClose?: () => void;
   duration?: number;
 }
 
 /**
  * SaturnToast
- * A polished, reusable success-toast UI component ready for future authentication integration.
+ * A polished, reusable notification UI component for authentication feedback.
  * Complies with SATURN liquid-glass aesthetic and accessible notification patterns.
  */
 export function SaturnToast({
   isOpen = false,
   heading = 'Welcome to SATURN',
   supportingText = 'Your second brain is ready.',
+  type = 'success',
   onClose,
   duration = 4500
 }: SaturnToastProps) {
@@ -31,14 +33,20 @@ export function SaturnToast({
 
   if (!isOpen) return null;
 
+  const isError = type === 'error';
+
   return (
     <aside
       role="status"
       aria-live="polite"
       className="fixed top-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto w-[90%] max-w-[380px] saturn-toast rounded-xl p-3.5 flex items-start gap-3 transition-all duration-200 animate-in fade-in slide-in-from-top-2"
     >
-      <div className="w-5 h-5 rounded-full bg-[#F7D794]/15 border border-[#F7D794]/30 flex items-center justify-center shrink-0 mt-0.5">
-        <Check className="w-3 h-3 text-[#F7D794] stroke-[2.5]" />
+      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${
+        isError
+          ? 'bg-[#F87171]/15 border border-[#F87171]/30 text-[#F87171]'
+          : 'bg-[#F7D794]/15 border border-[#F7D794]/30 text-[#F7D794]'
+      }`}>
+        <Check className="w-3 h-3 stroke-[2.5]" />
       </div>
 
       <div className="flex-1 min-w-0 pr-1">
