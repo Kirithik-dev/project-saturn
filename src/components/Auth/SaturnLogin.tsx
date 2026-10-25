@@ -255,6 +255,15 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
       {/* Main Centered Login Screen with responsive padding and scroll allowance */}
       <div className={`fixed inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-6 overflow-y-auto transition-opacity duration-500 ease-out ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
         <div className="pointer-events-auto relative w-full max-w-[416px] my-auto">
+          {/* Warm ambient glow backdrop behind the login card */}
+          <div 
+            className="absolute -inset-10 sm:-inset-16 rounded-[40px] pointer-events-none opacity-80 blur-3xl transition-opacity duration-500"
+            style={{
+              background: 'radial-gradient(circle, rgba(255, 136, 16, 0.18) 0%, rgba(247, 215, 148, 0.09) 45%, rgba(0, 0, 0, 0) 75%)'
+            }}
+            aria-hidden="true"
+          />
+
           {/* Liquid Glass Card Container */}
           <div className="relative rounded-2xl saturn-login-card px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">
             

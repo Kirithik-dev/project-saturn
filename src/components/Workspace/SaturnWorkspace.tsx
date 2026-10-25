@@ -17,7 +17,7 @@
 import React, { useState, useEffect } from 'react';
 import { LogOut, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { LivingTreeBackground } from './LivingTreeBackground';
+import { SaturnCinematicBackground } from './SaturnCinematicBackground';
 
 export function SaturnWorkspace() {
   const { user, signOut } = useAuth();
@@ -53,9 +53,6 @@ export function SaturnWorkspace() {
     try {
       setIsLoggingOut(true);
       setLogoutError(null);
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('saturn_tree_entered');
-      }
       const { error } = await signOut();
       if (error) {
         setLogoutError(error.message || 'Failed to sign out. Please try again.');
@@ -74,8 +71,8 @@ export function SaturnWorkspace() {
       className="fixed inset-0 w-screen h-screen bg-[#000000] overflow-hidden select-none z-30"
       aria-label="SATURN Vault Dashboard"
     >
-      {/* Living Generative Particle Tree Background (Phase 1) */}
-      <LivingTreeBackground />
+      {/* Cinematic Full-Screen Saturn Video Background (Pinterest Reference) */}
+      <SaturnCinematicBackground />
 
       {/* 
         Top-Right Log Out Button
