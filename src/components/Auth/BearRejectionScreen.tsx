@@ -2,16 +2,34 @@
  * @license
  * SPDX-License-Identifier: Apache-2.0
  * 
- * SATURN — Security Sentinel & Sentinel Bear Access Denied Gateway
- * Fullscreen edge-to-edge cinematic security lockdown screen for unauthorized accounts.
+ * SATURN — Access Request & Authorization Gateway
+ * AAA Sci-Fi Art Direction: Procedural "ACCESS DENIED" Glitch Headline & Refined Obsidian Gateway
  */
 
-import React, { useState, useEffect } from 'react';
-import { ShieldAlert, ArrowLeft, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Lock, Mail, LogOut, AlertCircle, Loader2, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 
 interface BearRejectionScreenProps {
   userEmail?: string | null;
+}
+
+interface GlitchSlice {
+  topPercent: number;
+  heightPercent: number;
+  shiftX: number;
+}
+
+interface Particle {
+  id: number;
+  leftPercent: number;
+  topPercent: number;
+  size: number;
+  color: string;
+  opacity: number;
+  duration: number;
+  delay: number;
 }
 
 export function BearRejectionScreen({ userEmail }: BearRejectionScreenProps) {
@@ -20,11 +38,153 @@ export function BearRejectionScreen({ userEmail }: BearRejectionScreenProps) {
   const [signOutError, setSignOutError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
+  // Access request email state
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
+  const [requestSuccess, setRequestSuccess] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  // Procedural Glitch State (Background Headline ONLY)
+  const [isGlitching, setIsGlitching] = useState(false);
+  const [headlineText, setHeadlineText] = useState('ACCESS DENIED');
+  const [glitchShiftX, setGlitchShiftX] = useState(0);
+  const [glitchSlices, setGlitchSlices] = useState<GlitchSlice[]>([]);
+  const [chromaticOffset, setChromaticOffset] = useState(0);
+
+  // Reduced motion preference
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
   useEffect(() => {
-    // Smooth entrance fade-in
+    // Reset previous access-request error and success state on mount
+    setRequestError(null);
+    setRequestSuccess(false);
+
     const timer = setTimeout(() => setMounted(true), 20);
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+      setPrefersReducedMotion(mediaQuery.matches);
+    }
     return () => clearTimeout(timer);
   }, []);
+
+  // Procedural Glitch Loop (Triggers every 4 - 9 seconds for 100 - 220ms)
+  // Peripheral Background Glitch Mark State
+  const [peripheralMark, setPeripheralMark] = useState<string | null>(null);
+  const [peripheralPosition, setPeripheralPosition] = useState<{ left: number; top: number }>({ left: 10, top: 15 });
+
+  // Generate 18 floating cosmic dust particles
+  const particles = useMemo(() => {
+    const DUST_COLORS = ['#F7D794', '#E29A38', '#FFF5E6', '#D48628'];
+    const result = [];
+    for (let i = 0; i < 18; i++) {
+      result.push({
+        id: i,
+        leftPercent: Math.floor(Math.random() * 92) + 4,
+        topPercent: Math.floor(Math.random() * 92) + 4,
+        size: Math.random() > 0.6 ? 2.5 : 1.5,
+        color: DUST_COLORS[Math.floor(Math.random() * DUST_COLORS.length)],
+        opacity: 0.15 + Math.random() * 0.35,
+        duration: 8 + Math.floor(Math.random() * 12),
+        delay: Math.floor(Math.random() * 6),
+      });
+    }
+    return result;
+  }, []);
+
+  // Procedural Glitch Loop (Triggers every 4 - 9 seconds for 100 - 200ms)
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let timeoutId: number;
+    let isMounted = true;
+
+    const peripheralTexts = [
+      '0x7A // CORE_RESTRICTED',
+      'SYS_LOCK // GATE_01',
+      '7F C9 00 A2',
+      'IDENTITY_DENIED',
+      'NULL_SCOPE',
+    ];
+
+    const triggerGlitchEvent = () => {
+      if (!isMounted) return;
+
+      setIsGlitching(true);
+
+      // Random horizontal shift (-16px to +16px)
+      const mainShift = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 12) + 5);
+      setGlitchShiftX(mainShift);
+
+      // Chromatic ghost offset (-7px to +7px)
+      const chromShift = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 6) + 3);
+      setChromaticOffset(chromShift);
+
+      // 10% chance to briefly switch to NO ACCESS fragment
+      if (Math.random() > 0.88) {
+        setHeadlineText('NO ACCESS');
+      }
+
+      // Show brief peripheral mark
+      const randomMark = peripheralTexts[Math.floor(Math.random() * peripheralTexts.length)];
+      const randLeft = Math.random() > 0.5 ? Math.floor(Math.random() * 15) + 5 : Math.floor(Math.random() * 15) + 78;
+      const randTop = Math.random() > 0.5 ? Math.floor(Math.random() * 20) + 8 : Math.floor(Math.random() * 20) + 72;
+      setPeripheralMark(randomMark);
+      setPeripheralPosition({ left: randLeft, top: randTop });
+
+      // 2 horizontal slice displacement strips
+      const slice1Top = Math.floor(Math.random() * 30) + 10;
+      const slice1Height = Math.floor(Math.random() * 18) + 8;
+      const slice1Shift = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 18) + 6);
+
+      const slice2Top = Math.floor(Math.random() * 30) + 55;
+      const slice2Height = Math.floor(Math.random() * 18) + 8;
+      const slice2Shift = (Math.random() > 0.5 ? 1 : -1) * (Math.floor(Math.random() * 20) + 6);
+
+      setGlitchSlices([
+        { topPercent: slice1Top, heightPercent: slice1Height, shiftX: slice1Shift },
+        { topPercent: slice2Top, heightPercent: slice2Height, shiftX: slice2Shift },
+      ]);
+
+      // Event duration: 100ms - 200ms
+      const duration = 100 + Math.floor(Math.random() * 100);
+      setTimeout(() => {
+        if (isMounted) {
+          setIsGlitching(false);
+          setHeadlineText('ACCESS DENIED');
+          setGlitchShiftX(0);
+          setChromaticOffset(0);
+          setGlitchSlices([]);
+          setPeripheralMark(null);
+        }
+      }, duration);
+
+      // Next glitch interval: 4s - 9s
+      const nextInterval = 4000 + Math.floor(Math.random() * 5000);
+      timeoutId = window.setTimeout(triggerGlitchEvent, nextInterval);
+    };
+
+    const initialDelay = 1800 + Math.floor(Math.random() * 2000);
+    timeoutId = window.setTimeout(triggerGlitchEvent, initialDelay);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [prefersReducedMotion]);
+
+  const sanitizeErrorMessage = (rawError?: string | null): string => {
+    const defaultMsg = "We couldn't send your request right now. Please try again later.";
+    if (!rawError) return defaultMsg;
+
+    const lower = rawError.toLowerCase();
+
+    // Preserve user-facing rate-limiting or session expiration messages
+    if (lower.includes('already submitted') || lower.includes('please wait') || lower.includes('session expired')) {
+      return rawError;
+    }
+
+    // Filter out all internal environment variables, API key names, or raw server traces
+    return defaultMsg;
+  };
 
   const handleSignOut = async () => {
     try {
@@ -32,226 +192,421 @@ export function BearRejectionScreen({ userEmail }: BearRejectionScreenProps) {
       setSignOutError(null);
       await signOut();
     } catch (err: unknown) {
-      console.error('[SATURN Security] Error during sign out from rejection screen:', err);
+      console.error('[SATURN Auth] Error during sign out from access screen:', err);
       const errorMessage = err instanceof Error ? err.message : 'Sign out failed. Please try again.';
       setSignOutError(errorMessage);
       setIsSigningOut(false);
     }
   };
 
-  const displayedEmail = userEmail || user?.email;
+  const handleRequestAccess = async () => {
+    if (isSendingRequest || requestSuccess) return;
+
+    setIsSendingRequest(true);
+    setRequestError(null);
+    setRequestSuccess(false);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        setRequestError("Your session expired. Please sign out and sign in again.");
+        setIsSendingRequest(false);
+        return;
+      }
+
+      let response = await fetch('/api/request-access', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      let result: { success?: boolean; error?: string; message?: string } | null = null;
+
+      if (response.status === 404) {
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke('request-access');
+        if (edgeError) {
+          const failMsg = sanitizeErrorMessage(edgeData?.error);
+          setRequestError(failMsg);
+          setRequestSuccess(false);
+          return;
+        }
+        result = edgeData;
+      } else {
+        try {
+          result = await response.json();
+        } catch {
+          result = { success: false, error: "We couldn't send your request right now. Please try again later." };
+        }
+      }
+
+      if (result && result.success) {
+        setRequestSuccess(true);
+        setRequestError(null);
+      } else {
+        const failMsg = sanitizeErrorMessage(result?.error);
+        setRequestError(failMsg);
+        setRequestSuccess(false);
+      }
+    } catch (err: unknown) {
+      console.error('[SATURN Access Request] Unexpected error:', err);
+      setRequestError("We couldn't send your request right now. Please try again later.");
+      setRequestSuccess(false);
+    } finally {
+      setIsSendingRequest(false);
+    }
+  };
+
+  const displayedEmail = userEmail || user?.email || '';
 
   return (
     <div
       data-testid="saturn-bear-rejection"
-      className={`relative w-full min-h-[100dvh] bg-black text-white select-none overflow-x-hidden overflow-y-auto flex flex-col items-center justify-between py-3 sm:py-5 px-3 sm:px-4 z-50 transition-opacity duration-500 ease-out motion-reduce:transition-none ${
+      className={`relative w-full min-h-[100dvh] bg-black text-[#F5F0E5] select-none overflow-x-hidden overflow-y-auto flex flex-col justify-between p-4 sm:p-8 z-50 transition-opacity duration-700 ease-out motion-reduce:transition-none ${
         mounted ? 'opacity-100' : 'opacity-0'
       }`}
-      aria-label="Access Denied Security Screen"
+      aria-label="SATURN Access Not Granted"
       role="region"
     >
       <style>{`
-        @keyframes saturnBearBreathing {
-          0%, 100% {
-            transform: scale(1.0);
-          }
-          50% {
-            transform: scale(1.025);
-          }
+        @keyframes saturnDustFloat {
+          0% { transform: translateY(0px) translateX(0px); }
+          50% { transform: translateY(-18px) translateX(10px); }
+          100% { transform: translateY(0px) translateX(0px); }
         }
-        @keyframes saturnHudScan {
-          0% {
-            top: 4%;
-            opacity: 0;
-          }
-          15% {
-            opacity: 0.45;
-          }
-          85% {
-            opacity: 0.45;
-          }
-          100% {
-            top: 94%;
-            opacity: 0;
-          }
-        }
-        .animate-bear-breathing {
-          animation: saturnBearBreathing 14s ease-in-out infinite;
-        }
-        .animate-hud-scan {
-          animation: saturnHudScan 7s linear infinite;
+        .animate-saturn-dust {
+          animation: saturnDustFloat ease-in-out infinite alternate;
         }
         @media (prefers-reduced-motion: reduce) {
-          .animate-bear-breathing,
-          .animate-hud-scan {
+          .animate-saturn-dust {
             animation: none !important;
           }
         }
       `}</style>
 
       {/* 
-        LAYER 1: Ambient Background Scenery (Fixed behind entire page)
+        ========================================================================
+        ENHANCED ATMOSPHERIC BACKGROUND LAYER (Z-0):
+        1. Far Background: Deep Black + Radial Charcoal Haze
+        2. Middle Layer: Drifting Cosmic Gold Dust + Scanlines + Localized Core Glow
+        3. Glitch Layer: Peripheral Code Marks + Scanline Streaks
+        ========================================================================
       */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0">
-        <img
-          src="/assets/aistudio/image_0a352fda.png"
-          alt=""
-          aria-hidden="true"
-          className="w-full h-full object-cover object-center filter blur-3xl scale-125 opacity-20"
+      <div className="fixed inset-0 overflow-hidden pointer-events-none select-none z-0" aria-hidden="true">
+        {/* Far Background Canvas */}
+        <div className="absolute inset-0 bg-black" />
+
+        {/* Subtle Charcoal Tonal Gradient */}
+        <div 
+          className="absolute inset-0 opacity-60"
+          style={{
+            background: 'radial-gradient(circle at 50% 30%, rgba(18, 14, 10, 0.7) 0%, rgba(0, 0, 0, 1) 85%)'
+          }}
         />
-        <div className="absolute inset-0 bg-black/85" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_35%,rgba(220,38,38,0.12)_0%,rgba(245,158,11,0.05)_45%,#000000_100%)]" />
-        {/* Subtle Scanlines & Grid */}
-        <div
-          className="absolute inset-0 opacity-[0.05] bg-[linear-gradient(rgba(255,255,255,0)_50%,rgba(0,0,0,1)_50%)] bg-[length:100%_4px]"
-          aria-hidden="true"
+
+        {/* Restrained Localized Champagne-Gold Core Glow Behind Headline */}
+        <div 
+          className={`absolute top-[32%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] sm:w-[850px] sm:h-[420px] blur-[110px] pointer-events-none transition-opacity duration-150 ${
+            isGlitching ? 'opacity-65 scale-[1.03]' : 'opacity-40 scale-100'
+          }`}
+          style={{
+            background: 'radial-gradient(circle, rgba(235, 125, 20, 0.16) 0%, rgba(247, 215, 148, 0.05) 50%, rgba(0, 0, 0, 0) 80%)'
+          }}
         />
-        <div
-          className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.5)_1px,transparent_1px)] [background-size:32px_32px]"
-          aria-hidden="true"
-        />
+
+        {/* Subtle Horizontal Scan-Line Texture */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,0.45)_50%)] bg-[length:100%_4px] opacity-20 pointer-events-none" />
+
+        {/* Drifting Champagne-Gold Cosmic Dust Particles */}
+        {particles.map((p: Particle) => (
+          <div
+            key={`dust-${p.id}`}
+            className="absolute rounded-full animate-saturn-dust pointer-events-none"
+            style={{
+              left: `${p.leftPercent}%`,
+              top: `${p.topPercent}%`,
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              backgroundColor: p.color,
+              opacity: isGlitching ? Math.min(1, p.opacity * 1.8) : p.opacity,
+              boxShadow: `0 0 ${p.size * 2}px ${p.color}`,
+              animationDuration: `${p.duration}s`,
+              animationDelay: `${p.delay}s`,
+            }}
+          />
+        ))}
+
+        {/* Transient Peripheral Glitch Mark */}
+        {peripheralMark && (
+          <div 
+            className="absolute font-mono text-[10px] tracking-[0.25em] text-[#F7D794]/70 font-medium uppercase pointer-events-none transition-all duration-75"
+            style={{
+              left: `${peripheralPosition.left}%`,
+              top: `${peripheralPosition.top}%`,
+              textShadow: '0 0 6px rgba(247,215,148,0.5)',
+            }}
+          >
+            {peripheralMark}
+          </div>
+        )}
       </div>
 
       {/* 
-        LAYER 2: Top Security HUD Header
-        Left: SATURN SECURITY // RESTRICTED ACCESS
-        Right: THREAT LEVEL: UNIMPRESSED
+        ========================================================================
+        DELIBERATE VERTICAL LAYOUT (Z-10 / Z-20)
+        1. Upper Region: Brand Identity & Terminal Status
+        2. Middle Region: Procedural Glitch Headline "ACCESS DENIED"
+        3. Lower Region: Un-overlapped Access Message Card & Controls
+        ========================================================================
       */}
-      <header className="relative w-full max-w-5xl flex items-center justify-between shrink-0 z-20 mb-2 sm:mb-3">
-        {/* Status Indicator */}
-        <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-red-950/80 ring-1 ring-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.12)]">
-          <div className="relative flex items-center justify-center w-2 h-2">
-            <span className="absolute inline-flex w-full h-full rounded-full bg-red-500 opacity-75 animate-ping motion-reduce:hidden" />
-            <span className="relative inline-flex w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,1)]" />
-          </div>
-          <span className="text-[11px] sm:text-xs font-mono tracking-wider uppercase text-red-400 font-medium">
-            SATURN SECURITY <span className="text-red-700 mx-1">//</span> RESTRICTED ACCESS
-          </span>
-        </div>
-
-        {/* Humorous Threat Level Readout */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/75 backdrop-blur-md border border-amber-950/70 ring-1 ring-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.08)]">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.7)]" />
-          <span className="text-[10px] sm:text-[11px] font-mono tracking-wider uppercase text-amber-300 font-medium">
-            THREAT LEVEL: <span className="text-amber-400 font-semibold">UNIMPRESSED</span>
-          </span>
-        </div>
-      </header>
-
-      {/* 
-        LAYER 3: Main Centered Flow Layout
-        Bear and Panel are sequential flex children with ZERO overlap
-      */}
-      <main className="relative w-full max-w-xl flex flex-col items-center justify-center flex-1 my-auto gap-3 sm:gap-4 z-20">
-        {/* 
-          1. Dedicated Bear Visual Area
-          Desktop size: ~420–520px wide, ~380–480px tall, constrained by viewport height
-          object-fit: contain ensures entire bear, head, and raised paw are 100% visible
-        */}
-        <div className="relative w-full max-w-[480px] h-[300px] sm:h-[360px] md:h-[400px] max-h-[42vh] flex items-center justify-center shrink-0">
-          {/* Subtle HUD Corner Markers */}
-          <div className="absolute -top-1 -left-1 w-3.5 h-3.5 border-t-2 border-l-2 border-red-500/50 pointer-events-none" />
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 border-t-2 border-r-2 border-red-500/50 pointer-events-none" />
-          <div className="absolute -bottom-1 -left-1 w-3.5 h-3.5 border-b-2 border-l-2 border-red-500/50 pointer-events-none" />
-          <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 border-b-2 border-r-2 border-red-500/50 pointer-events-none" />
-
-          {/* Faint Animated Scanning Line within bear frame */}
-          <div className="absolute inset-x-2 h-[1px] bg-gradient-to-r from-transparent via-red-500/40 to-transparent pointer-events-none animate-hud-scan" />
-
-          {/* Floating Label: SECURITY GUARD // ON DUTY (in top-right corner, clear of head and paw) */}
-          <div className="absolute top-2 right-2 z-20 pointer-events-none">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/85 backdrop-blur-md border border-red-950/80 ring-1 ring-red-500/30 shadow-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_6px_rgba(239,68,68,0.9)]" />
-              <span className="text-[9px] font-mono tracking-widest uppercase text-red-300 font-medium">
-                SECURITY GUARD <span className="text-red-700">//</span> ON DUTY
-              </span>
-            </div>
-          </div>
-
-          {/* Bear Image Container */}
-          <div className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xl bg-black/40 border border-red-950/40 shadow-[0_0_35px_rgba(220,38,38,0.12)]">
-            <img
-              src="/assets/aistudio/image_0a352fda.png"
-              alt="SATURN Security Sentinel Bear"
-              className="w-full h-full object-contain object-center drop-shadow-[0_0_30px_rgba(0,0,0,0.95)] animate-bear-breathing"
-              loading="eager"
-            />
-            {/* Subtle dark gradient around image edges without over-darkening the bear */}
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_60%,rgba(0,0,0,0.35)_85%,#000000_100%)] pointer-events-none" />
-          </div>
-        </div>
+      <div className="relative w-full max-w-4xl mx-auto flex flex-col items-center justify-between min-h-[92dvh] z-10 py-3 sm:py-5 space-y-3 sm:space-y-5">
 
         {/* 
-          2. Rejection Panel (Positioned Completely BELOW the Bear Image)
-          Classified-terminal appearance with dark glass surface, crimson border, and red glow
+          ----------------------------------------------------------------------
+          UPPER REGION: SATURN Identity & Terminal Indicator
+          ----------------------------------------------------------------------
         */}
-        <div className="relative w-full max-w-md p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-black/90 via-black/85 to-zinc-950/90 backdrop-blur-xl border border-red-950/80 ring-1 ring-red-500/25 shadow-[0_0_35px_rgba(220,38,38,0.2),inset_0_1px_0_rgba(255,200,120,0.08)] text-center space-y-3 shrink-0">
-          {/* Subtle amber/gold rim highlight at top border */}
-          <div className="absolute inset-x-12 -top-[1px] h-[1px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent pointer-events-none" />
-
-          {/* Header Lockup: Security Badge + Bold Headline + Status Pill */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-red-500 shrink-0" aria-hidden="true" />
-              <span className="text-[10px] sm:text-[11px] font-mono tracking-widest uppercase text-red-300 bg-red-950/70 border border-red-800/40 px-2.5 py-0.5 rounded-md font-medium shadow-sm">
-                IDENTITY NOT AUTHORIZED
-              </span>
+        <header className="flex flex-col items-center space-y-2 pt-1 text-center z-20">
+          <div className="flex items-center gap-2.5">
+            {/* Saturn Planet Logo */}
+            <div className="relative w-7 h-7 flex items-center justify-center shrink-0">
+              <div className="absolute inset-0 rounded-full bg-[#F7D794]/20 blur-md" />
+              <svg 
+                className="relative w-6 h-6 text-[#F7D794] filter drop-shadow-[0_2px_8px_rgba(247,215,148,0.40)]" 
+                viewBox="0 0 100 100" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="planetGradBreach" x1="20" y1="20" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFE8B5" />
+                    <stop offset="45%" stopColor="#E29A38" />
+                    <stop offset="100%" stopColor="#5C2508" />
+                  </linearGradient>
+                  <linearGradient id="ringGradBreach" x1="10" y1="30" x2="90" y2="70" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#FFEFC9" stopOpacity="0.95" />
+                    <stop offset="50%" stopColor="#E5993B" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#8C4112" stopOpacity="0.3" />
+                  </linearGradient>
+                </defs>
+                <path d="M 12,42 C 22,25 78,25 88,42" stroke="url(#ringGradBreach)" strokeWidth="3.2" strokeLinecap="round" opacity="0.45" />
+                <circle cx="50" cy="50" r="23" fill="url(#planetGradBreach)" />
+                <circle cx="50" cy="50" r="23" fill="none" stroke="rgba(255, 235, 195, 0.35)" strokeWidth="1" />
+                <path d="M 30,46 Q 50,53 70,46" stroke="rgba(255, 245, 220, 0.28)" strokeWidth="1.2" strokeLinecap="round" />
+                <path d="M 33,54 Q 50,61 67,54" stroke="rgba(60, 20, 6, 0.35)" strokeWidth="1.4" strokeLinecap="round" />
+                <path d="M 88,42 C 86,64 14,64 12,42" stroke="url(#ringGradBreach)" strokeWidth="3.4" strokeLinecap="round" />
+              </svg>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-bold tracking-wider text-white flex items-center justify-center gap-2">
-              <span>ACCESS DENIED</span>
-              <span role="img" aria-label="bear" className="text-lg">🐻</span>
-            </h1>
-
-            {/* Humorous line */}
-            <p className="text-xs sm:text-[13px] text-amber-200/90 font-mono tracking-wide">
-              The bear has reviewed your credentials. The bear is unconvinced.
-            </p>
-
-            <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed pt-0.5">
-              This SATURN workspace is restricted to authorized operators.
-            </p>
+            {/* SATURN Wordmark */}
+            <span className="text-lg sm:text-xl font-bold tracking-[0.28em] text-[#F5F0E5] font-sans">
+              SATURN
+            </span>
           </div>
 
-          {/* Dynamic Authenticated Email Display */}
-          {displayedEmail && (
-            <div className="py-1 px-3 rounded-lg bg-zinc-950/80 border border-red-950/60 text-xs font-mono text-zinc-400 max-w-full truncate">
-              <span className="text-zinc-500">Signed in as:</span>{' '}
-              <span className="text-red-200 font-semibold">{displayedEmail}</span>
-            </div>
-          )}
+          {/* Terminal Indicator */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#F7D794]/[0.06] border border-[#F7D794]/20 text-[#F7D794] text-[10px] sm:text-[11px] font-mono tracking-[0.22em] font-medium uppercase shadow-sm">
+            <Lock className="w-2.5 h-2.5 text-[#F7D794]/90 shrink-0" aria-hidden="true" />
+            <span>AUTHORIZATION // RESTRICTED</span>
+          </div>
+        </header>
 
-          {/* Sign Out Error Alert if any */}
-          {signOutError && (
-            <div className="p-2 rounded-lg bg-red-950/50 border border-red-800/50 text-red-300 text-xs flex items-center gap-2 text-left" role="alert">
-              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-              <span>{signOutError}</span>
-            </div>
-          )}
-
-          {/* Primary Action Button: Red-to-Deep-Orange Gradient */}
-          <div>
-            <button
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-700 hover:from-red-500 hover:via-rose-500 hover:to-amber-600 active:scale-[0.98] text-white font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-red-950/60 ring-1 ring-white/10 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* 
+          ----------------------------------------------------------------------
+          MIDDLE REGION: Procedural Glitch Headline "ACCESS DENIED"
+          Responsive text size ensuring vertical space
+          ----------------------------------------------------------------------
+        */}
+        <div 
+          className="relative w-full flex flex-col items-center justify-center my-auto py-2 pointer-events-none select-none z-10 min-h-[90px] sm:min-h-[120px]"
+          aria-hidden="true"
+        >
+          {/* Headline Stack Container */}
+          <div 
+            className="relative font-mono font-extrabold tracking-[0.16em] sm:tracking-[0.22em] uppercase text-center transition-all duration-75"
+            style={{
+              transform: isGlitching ? `translateX(${glitchShiftX}px)` : 'none',
+            }}
+          >
+            {/* Base Stable Glow Underlayer */}
+            <span 
+              className="absolute inset-0 text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F7D794]/20 blur-md pointer-events-none select-none"
             >
-              <ArrowLeft className="w-4 h-4 text-white/90" />
-              <span>{isSigningOut ? 'Signing Out...' : 'SWITCH ACCOUNT / SIGN OUT'}</span>
-            </button>
-          </div>
+              {headlineText}
+            </span>
 
-          {/* Friendly Disclaimer and Apology */}
-          <div className="pt-2 border-t border-white/10">
-            <p className="text-[11px] sm:text-xs text-zinc-400 leading-relaxed max-w-sm mx-auto text-center font-normal">
-              Just for fun! 😄 This is a playful SATURN demo, not a personal judgment. Sorry if the bear&apos;s rejection hurt your feelings — no hard feelings, okay? <span className="text-amber-400 font-medium">🐻❤️</span>
-            </p>
+            {/* Chromatic Red/Magenta Offset Ghost Layer */}
+            {isGlitching && (
+              <span 
+                className="absolute inset-0 text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#FF4D4D]/75 mix-blend-screen pointer-events-none select-none"
+                style={{
+                  transform: `translateX(${-chromaticOffset}px) translateY(${chromaticOffset > 0 ? 1 : -1}px)`,
+                  clipPath: 'inset(15% 0 35% 0)',
+                }}
+              >
+                {headlineText}
+              </span>
+            )}
+
+            {/* Chromatic Cyan/Ivory Offset Ghost Layer */}
+            {isGlitching && (
+              <span 
+                className="absolute inset-0 text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#FFF5E6]/85 mix-blend-screen pointer-events-none select-none"
+                style={{
+                  transform: `translateX(${chromaticOffset * 1.4}px)`,
+                  clipPath: 'inset(50% 0 10% 0)',
+                }}
+              >
+                {headlineText}
+              </span>
+            )}
+
+            {/* Main Primary Headline Text */}
+            <span 
+              className={`relative block text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold transition-all duration-75 ${
+                isGlitching 
+                  ? 'text-[#FFF5E6] filter drop-shadow-[0_0_18px_rgba(255,245,230,0.8)]' 
+                  : 'bg-gradient-to-r from-[#FFF5E6] via-[#F7D794] to-[#E29A38] bg-clip-text text-transparent filter drop-shadow-[0_0_12px_rgba(247,215,148,0.30)]'
+              }`}
+            >
+              {headlineText}
+            </span>
+
+            {/* Horizontal Strip Displacement Slice Overlays */}
+            {isGlitching && glitchSlices.map((slice, idx) => (
+              <div
+                key={`h-slice-${idx}`}
+                className="absolute inset-0 pointer-events-none text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-[#F7D794] font-extrabold"
+                style={{
+                  clipPath: `inset(${slice.topPercent}% 0 ${100 - slice.topPercent - slice.heightPercent}% 0)`,
+                  transform: `translateX(${slice.shiftX}px)`,
+                }}
+              >
+                {headlineText}
+                {/* Thin Scanline Streak */}
+                <div 
+                  className="absolute left-0 right-0 h-[1.5px] bg-[#FFF5E6] shadow-[0_0_10px_#FFF5E6]"
+                  style={{ top: `${slice.topPercent}%` }}
+                />
+              </div>
+            ))}
           </div>
         </div>
-      </main>
+
+        {/* 
+          ----------------------------------------------------------------------
+          LOWER REGION: Refined Obsidian Access Panel & Actions
+          Positioned below the glitch headline with zero overlapping text
+          ----------------------------------------------------------------------
+        */}
+        <main className="relative w-full max-w-[430px] z-20">
+          {/* Subtle Ambient Card Halo */}
+          <div 
+            className="absolute -inset-6 rounded-[32px] pointer-events-none opacity-40 blur-2xl"
+            style={{
+              background: 'radial-gradient(circle, rgba(235, 125, 20, 0.12) 0%, rgba(247, 215, 148, 0.03) 50%, rgba(0, 0, 0, 0) 80%)'
+            }}
+            aria-hidden="true"
+          />
+
+          {/* Smoked Glass Obsidian Container */}
+          <div className="relative rounded-2xl sm:rounded-3xl bg-black/65 backdrop-blur-xl border border-[#F7D794]/15 px-5 py-5 sm:px-7 sm:py-6 text-center space-y-4 shadow-[0_16px_48px_rgba(0,0,0,0.80)]">
+            {/* Top Champagne Refraction Line */}
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#F7D794]/30 to-transparent pointer-events-none" aria-hidden="true" />
+
+            {/* Message Headings */}
+            <div className="space-y-2">
+              <h2 className="text-xl sm:text-2xl font-semibold tracking-tight text-[#F5F0E5]">
+                Access not yet available
+              </h2>
+              <p className="text-xs sm:text-sm text-[#F5F0E5]/70 leading-relaxed max-w-sm mx-auto font-normal">
+                This account doesn&apos;t currently have access to SATURN. If you believe this is a mistake, you can request access below.
+              </p>
+            </div>
+
+            {/* Authenticated User Email Display */}
+            {displayedEmail && (
+              <div className="py-2 px-3.5 rounded-xl bg-white/[0.03] border border-[#F7D794]/15 text-xs text-[#F5F0E5]/80 font-mono flex items-center justify-center gap-2 max-w-full truncate shadow-inner">
+                <Mail className="w-3.5 h-3.5 text-[#F7D794]/80 shrink-0" aria-hidden="true" />
+                <span className="text-[#F5F0E5]/50 shrink-0">Signed in as:</span>
+                <span className="text-[#F7D794] font-medium truncate">{displayedEmail}</span>
+              </div>
+            )}
+
+            {/* Success Banner */}
+            {requestSuccess && (
+              <div className="p-3.5 rounded-xl bg-[#F7D794]/10 border border-[#F7D794]/30 text-[#F7D794] text-xs flex items-start gap-2.5 text-left animate-fade-in" role="status">
+                <CheckCircle2 className="w-4 h-4 text-[#F7D794] shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="leading-snug">
+                  Access request sent successfully. Thank you — the workspace owner has been notified.
+                </span>
+              </div>
+            )}
+
+            {/* Request Error Alert */}
+            {requestError && (
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[#F87171] text-xs flex items-start gap-2.5 text-left" role="alert">
+                <AlertCircle className="w-4 h-4 text-[#F87171] shrink-0 mt-0.5" aria-hidden="true" />
+                <span className="leading-snug">{requestError}</span>
+              </div>
+            )}
+
+            {/* Sign Out Error Alert */}
+            {signOutError && (
+              <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[#F87171] text-xs flex items-center gap-2 text-left" role="alert">
+                <AlertCircle className="w-4 h-4 text-[#F87171] shrink-0" />
+                <span className="leading-snug">{signOutError}</span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-3 pt-1">
+              {/* Primary Action: Request Access */}
+              <button
+                type="button"
+                onClick={handleRequestAccess}
+                disabled={isSendingRequest || requestSuccess}
+                className={`w-full py-3 px-4 rounded-xl text-[#140804] font-semibold text-xs sm:text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-80 disabled:cursor-not-allowed ${
+                  requestSuccess
+                    ? 'bg-[#F7D794] shadow-[0_4px_20px_rgba(247,215,148,0.25)]'
+                    : 'bg-gradient-to-r from-[#F7D794] via-[#E29A38] to-[#D48628] hover:from-[#FFE8B5] hover:via-[#F7D794] hover:to-[#E29A38] active:scale-[0.99] shadow-[0_4px_20px_rgba(226,154,56,0.22)]'
+                }`}
+              >
+                {isSendingRequest ? (
+                  <>
+                    <Loader2 className="w-4 h-4 text-[#140804] animate-spin shrink-0" aria-hidden="true" />
+                    <span>Sending request...</span>
+                  </>
+                ) : requestSuccess ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-[#140804] shrink-0" aria-hidden="true" />
+                    <span>Request sent</span>
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 text-[#140804] shrink-0" aria-hidden="true" />
+                    <span>Request access</span>
+                  </>
+                )}
+              </button>
+
+              {/* Secondary Action: Sign Out / Switch Account */}
+              <button
+                type="button"
+                onClick={handleSignOut}
+                disabled={isSigningOut}
+                className="w-full py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-[#F5F0E5]/15 text-[#F5F0E5]/80 hover:text-[#F5F0E5] font-medium text-xs sm:text-sm tracking-wide transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <LogOut className="w-4 h-4 text-[#F5F0E5]/60" aria-hidden="true" />
+                <span>{isSigningOut ? 'Signing out...' : 'Sign out / Switch account'}</span>
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
-
-
-

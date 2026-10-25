@@ -19,8 +19,6 @@
 
 export const terrainVertexShader = /* glsl */ `
 uniform float uTime;
-uniform vec2 uPointer;
-uniform float uPointerIntensity;
 uniform float uBasePointSize;
 uniform float uWaveSpeed;
 uniform float uWaveAmplitude;
@@ -206,15 +204,6 @@ void main() {
   float crest;
   float streamGlint;
   evaluateOrganicSurface(p, worldPos, surfNormal, crest, streamGlint);
-
-  // Smooth Pointer Disturbance
-  if (uPointerIntensity > 0.001) {
-    vec2 pointerPos = vec2(uPointer.x * 34.0, uPointer.y * 22.0 - 8.0);
-    float mouseDist = length(p - pointerPos);
-    float pointerEnvelope = exp(-mouseDist * 0.13) * (1.0 - smoothstep(0.0, 26.0, mouseDist));
-    float pointerWave = sin(mouseDist * 0.38 - uTime * 2.6) * pointerEnvelope * 0.50 * uPointerIntensity;
-    worldPos.y += pointerWave;
-  }
 
   vElevation = worldPos.y;
   vCrest = crest;

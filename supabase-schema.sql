@@ -63,3 +63,27 @@ create trigger set_notes_updated_at
   before update on public.notes
   for each row
   execute function public.handle_updated_at();
+
+-- 9. Create Access Requests Table for Rate-Limiting & Audit Logging
+create table if not exists public.access_requests (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  requester_email text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+alter table public.access_requests enable row level security;
+
+drop policy if exists "Users can view own access requests" on public.access_requests;
+create policy "Users can view own access requests"
+  on public.access_requests for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own access requests" on public.access_requests;
+create policy "Users can insert own access requests"
+  on public.access_requests for insert
+  with check (auth.uid() = user_id);
+
+create index if not exists access_requests_user_id_created_at_idx 
+  on public.access_requests (user_id, created_at desc);
+

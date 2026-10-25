@@ -254,25 +254,30 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
 
       {/* Main Centered Login Screen with responsive padding and scroll allowance */}
       <div className={`fixed inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-6 overflow-y-auto transition-opacity duration-500 ease-out ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="pointer-events-auto relative w-full max-w-[416px] my-auto">
+        <div className="pointer-events-auto relative w-full max-w-[424px] my-auto">
           {/* Warm ambient glow backdrop behind the login card */}
           <div 
-            className="absolute -inset-10 sm:-inset-16 rounded-[40px] pointer-events-none opacity-80 blur-3xl transition-opacity duration-500"
+            className="absolute -inset-12 sm:-inset-16 rounded-[48px] pointer-events-none opacity-65 blur-3xl transition-opacity duration-500"
             style={{
-              background: 'radial-gradient(circle, rgba(255, 136, 16, 0.18) 0%, rgba(247, 215, 148, 0.09) 45%, rgba(0, 0, 0, 0) 75%)'
+              background: 'radial-gradient(circle, rgba(235, 125, 20, 0.15) 0%, rgba(247, 215, 148, 0.06) 45%, rgba(0, 0, 0, 0) 75%)'
             }}
             aria-hidden="true"
           />
 
-          {/* Liquid Glass Card Container */}
-          <div className="relative rounded-2xl saturn-login-card px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">
+          {/* Liquid Obsidian Portal Glass Card Container */}
+          <div className="relative rounded-[24px] saturn-login-card px-7 py-8 sm:px-9 sm:py-9 transition-all duration-300 overflow-hidden">
+            {/* Corner Light Refractions inside card */}
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#F7D794]/35 to-transparent pointer-events-none" aria-hidden="true" />
+            <div className="absolute top-0 left-0 w-36 h-36 bg-[#F7D794]/[0.05] rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
+            <div className="absolute bottom-0 right-0 w-36 h-36 bg-[#E29A38]/[0.06] rounded-full blur-2xl pointer-events-none" aria-hidden="true" />
             
             {/* Brand Header */}
-            <header className="flex flex-col items-center text-center mb-5">
-              {/* Saturn Planet Logo (Restrained, crisp geometry, fine perspective lines) */}
-              <div className="relative w-11 h-11 flex items-center justify-center mb-1.5" aria-hidden="true">
+            <header className="relative flex flex-col items-center text-center mb-6">
+              {/* Saturn Planet Logo */}
+              <div className="relative w-12 h-12 flex items-center justify-center mb-2" aria-hidden="true">
+                <div className="absolute inset-1 rounded-full bg-[#F7D794]/12 blur-md" />
                 <svg 
-                  className="relative w-10 h-10 text-[#F7D794] filter drop-shadow-[0_2px_6px_rgba(247,215,148,0.25)]" 
+                  className="relative w-10.5 h-10.5 text-[#F7D794] filter drop-shadow-[0_2px_8px_rgba(247,215,148,0.30)]" 
                   viewBox="0 0 100 100" 
                   fill="none" 
                   xmlns="http://www.w3.org/2000/svg"
@@ -348,17 +353,17 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
 
               {/* Brand Wordmark & Tagline */}
               <div className="flex items-center gap-1.5">
-                <span className="font-['Cinzel',serif] text-lg font-bold tracking-[0.26em] text-[#F5F0E5] drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                <span className="font-['Cinzel',serif] text-xl font-bold tracking-[0.28em] text-[#F5F0E5] drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                   SATURN
                 </span>
               </div>
-              <p className="text-[10px] font-mono tracking-[0.2em] uppercase text-[#F7D794]/75 mt-0.5">
+              <p className="text-[10px] font-mono tracking-[0.24em] uppercase text-[#F7D794]/75 mt-1">
                 YOUR SECOND BRAIN.
               </p>
 
               {/* Auxiliary Mode Headings */}
               {mode === 'signup' && (
-                <div className="mt-3">
+                <div className="mt-3.5">
                   <h1 className="text-lg font-semibold text-[#F5F0E5] tracking-tight">
                     Create your vault.
                   </h1>
@@ -369,7 +374,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
               )}
 
               {mode === 'forgot' && (
-                <div className="mt-3">
+                <div className="mt-3.5">
                   <h1 className="text-lg font-semibold text-[#F5F0E5] tracking-tight">
                     Recover access.
                   </h1>
@@ -380,7 +385,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
               )}
 
               {mode === 'reset-password' && (
-                <div className="mt-3">
+                <div className="mt-3.5">
                   <h1 className="text-lg font-semibold text-[#F5F0E5] tracking-tight">
                     Set new password.
                   </h1>
@@ -393,14 +398,14 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
 
             {/* General API Error Alert */}
             {apiError && (
-              <div className="mb-3 p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[#F87171] text-xs flex items-start gap-2" role="alert">
+              <div className="relative mb-3.5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-[#F87171] text-xs flex items-start gap-2.5" role="alert">
                 <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span className="leading-snug flex-1">{apiError}</span>
               </div>
             )}
 
             {/* Form */}
-            <form onSubmit={handleSubmit} noValidate className="space-y-1">
+            <form onSubmit={handleSubmit} noValidate className="relative space-y-1">
               {/* Name Input (Sign Up only) */}
               {mode === 'signup' && (
                 <div>
@@ -408,7 +413,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                     Full Name
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F7D794]/75">
                       <User className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <input
@@ -426,7 +431,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                       aria-invalid={touched.name && !!errors.name}
                       aria-describedby="name-error"
                       placeholder="Ada Lovelace"
-                      className="w-full h-10.5 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
+                      className="w-full h-11 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
                     />
                   </div>
                   {/* Stable reserved error space to prevent vertical layout shift */}
@@ -448,7 +453,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                     Email Address
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F7D794]/75">
                       <Mail className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <input
@@ -467,7 +472,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                       aria-describedby="email-error"
                       placeholder="name@domain.com"
                       autoComplete="email"
-                      className="w-full h-10.5 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
+                      className="w-full h-11 pl-10.5 pr-4 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
                     />
                   </div>
                   {/* Stable reserved error space to prevent vertical layout shift */}
@@ -491,7 +496,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                     </label>
                   </div>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F7D794]/75">
                       <Lock className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <input
@@ -510,13 +515,13 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                       aria-describedby="password-error"
                       placeholder="••••••••••••"
                       autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
-                      className="w-full h-10.5 pl-10.5 pr-10.5 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
+                      className="w-full h-11 pl-10.5 pr-10.5 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       disabled={isLoading}
-                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-white/40 hover:text-white/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#F7D794] rounded-md transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-white/45 hover:text-white/85 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#F7D794] rounded-md transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? (
@@ -545,7 +550,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                     Confirm Password
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F5F0E5]/40">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-[#F7D794]/75">
                       <Lock className="w-4 h-4" aria-hidden="true" />
                     </div>
                     <input
@@ -564,7 +569,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                       aria-describedby="confirm-error"
                       placeholder="••••••••••••"
                       autoComplete="new-password"
-                      className="w-full h-10.5 pl-10.5 pr-10.5 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
+                      className="w-full h-11 pl-10.5 pr-10.5 saturn-glass-input rounded-xl text-sm text-[#F5F0E5] placeholder-[#F5F0E5]/35 disabled:opacity-50"
                     />
                   </div>
                   {/* Stable reserved error space to prevent vertical layout shift */}
@@ -620,7 +625,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                 type="submit"
                 disabled={isLoading}
                 aria-busy={isLoading}
-                className="w-full relative mt-1 py-2.5 px-4 rounded-xl bg-[#F7D794] hover:bg-[#FFE2A8] active:bg-[#EAC77E] active:scale-[0.99] text-[#120B06] font-semibold text-sm tracking-wide shadow-[0_2px_10px_rgba(247,215,148,0.16)] hover:shadow-[0_3px_14px_rgba(247,215,148,0.24)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7D794] focus-visible:ring-offset-2 focus-visible:ring-offset-[#120F0C] transition-all duration-150 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full relative mt-1.5 h-11 px-4 rounded-xl saturn-primary-btn text-sm font-semibold tracking-wide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F7D794] focus-visible:ring-offset-2 focus-visible:ring-offset-[#120F0C] flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isLoading ? (
                   <div className="flex items-center gap-2 text-[#120B06]">
@@ -645,7 +650,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
             {mode !== 'forgot' && mode !== 'reset-password' && (
               <>
                 {/* Clean Non-Pill Divider */}
-                <div className="my-3.5 flex items-center gap-3" aria-hidden="true">
+                <div className="my-4 flex items-center gap-3" aria-hidden="true">
                   <div className="flex-1 border-t border-white/[0.08]" />
                   <span className="text-[10px] uppercase font-mono tracking-widest text-[#E0D8CC]/45 select-none">
                     or continue with
@@ -658,7 +663,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
                   type="button"
                   onClick={handleGoogleSignIn}
                   disabled={isLoading}
-                  className="w-full py-2.5 px-4 rounded-xl bg-white/[0.025] hover:bg-white/[0.06] active:bg-white/[0.08] active:scale-[0.99] border border-white/10 hover:border-white/20 text-sm font-medium text-[#F5F0E5]/90 flex items-center justify-center gap-2.5 shadow-[0_2px_8px_rgba(0,0,0,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#120F0C] transition-all duration-150 disabled:opacity-60 cursor-pointer"
+                  className="w-full h-11 px-4 rounded-xl saturn-glass-button-secondary text-sm font-medium text-[#F5F0E5]/90 flex items-center justify-center gap-2.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#120F0C] disabled:opacity-60 cursor-pointer"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path
@@ -684,7 +689,7 @@ export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
             )}
 
             {/* Bottom Mode Switcher */}
-            <footer className="mt-4.5 text-center text-xs text-[#E0D8CC]/65">
+            <footer className="mt-5 text-center text-xs text-[#E0D8CC]/65">
               {mode === 'signin' && (
                 <p>
                   <span>New to SATURN?</span>{' '}

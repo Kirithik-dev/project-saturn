@@ -126,8 +126,6 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
       fragmentShader: terrainFragmentShader,
       uniforms: {
         uTime: { value: 0 },
-        uPointer: { value: new THREE.Vector2(0, 0) },
-        uPointerIntensity: { value: 0 },
         uBasePointSize: { value: 1.8 * dpr },
         uWaveSpeed: { value: waveBlender.current.waveSpeed },
         uWaveAmplitude: { value: waveBlender.current.waveAmplitude },
@@ -258,30 +256,7 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
     const starsMesh = new THREE.Points(starsGeometry, starsMaterial);
     scene.add(starsMesh);
 
-    // 6. Interaction & Pointer Parallax handling
-    const pointerTarget = new THREE.Vector2(0, 0);
-    const pointerCurrent = new THREE.Vector2(0, 0);
-    let pointerIntensityTarget = 0;
-    let pointerIntensityCurrent = 0;
-    let pointerTimeout: number | null = null;
-
-    const handlePointerMove = (e: MouseEvent) => {
-      const rect = container.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = -(((e.clientY - rect.top) / rect.height) * 2 - 1);
-
-      pointerTarget.set(x, y);
-      pointerIntensityTarget = 1.0;
-
-      if (pointerTimeout) clearTimeout(pointerTimeout);
-      pointerTimeout = window.setTimeout(() => {
-        pointerIntensityTarget = 0.0;
-      }, 1400);
-    };
-
-    window.addEventListener('mousemove', handlePointerMove);
-
-    // 7. Resize Handler
+    // 6. Resize Handler
     const handleResize = () => {
       if (!container) return;
       width = container.clientWidth || window.innerWidth;
@@ -301,7 +276,7 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
 
     window.addEventListener('resize', handleResize);
 
-    // 8. Render Loop & Lifecycle Management
+    // 7. Render Loop & Lifecycle Management
     let frameId = 0;
     let lastTime = performance.now();
     let isTabVisible = true;
@@ -332,15 +307,6 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
       // Update Wave Blender parameters
       waveBlender.update(delta * motionFactor);
 
-      // Smooth pointer lerp
-      pointerCurrent.lerp(pointerTarget, 0.06);
-      pointerIntensityCurrent += (pointerIntensityTarget - pointerIntensityCurrent) * 0.04;
-
-      // Subtle camera micro-tilt parallax
-      camera.position.x = baseCameraPos.x + pointerCurrent.x * 1.8;
-      camera.position.y = baseCameraPos.y + pointerCurrent.y * 1.2;
-      camera.lookAt(0, 3.5, -6.0);
-
       // Orbit key light smoothly
       // Modulo 400 * pi (1256.6370614) prevents single-precision float degradation over hours
       const elapsedTime = ((now * 0.001) % 1256.6370614) * motionFactor;
@@ -352,8 +318,6 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
       terrainMaterial.uniforms.uWaveSpeed.value = waveBlender.current.waveSpeed;
       terrainMaterial.uniforms.uWaveAmplitude.value = waveBlender.current.waveAmplitude;
       terrainMaterial.uniforms.uSecondaryIntensity.value = waveBlender.current.secondaryIntensity;
-      terrainMaterial.uniforms.uPointer.value.copy(pointerCurrent);
-      terrainMaterial.uniforms.uPointerIntensity.value = pointerIntensityCurrent;
 
       embersMaterial.uniforms.uTime.value = elapsedTime;
 
@@ -366,8 +330,6 @@ export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({
     // Cleanup Resources
     return () => {
       cancelAnimationFrame(frameId);
-      if (pointerTimeout) clearTimeout(pointerTimeout);
-      window.removeEventListener('mousemove', handlePointerMove);
       window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
 
