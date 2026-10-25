@@ -8,8 +8,19 @@ const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SU
 const DEFAULT_URL = 'https://urkfmgwhxyyfqghiwrjh.supabase.co';
 const DEFAULT_KEY = 'sb_publishable_eJEgZeZDN5dntvlzgOnkkQ_1EfknCOw';
 
-export const SUPABASE_URL = envUrl && envUrl.trim().length > 0 ? envUrl.trim() : DEFAULT_URL;
-export const SUPABASE_ANON_KEY = envKey && envKey.trim().length > 0 ? envKey.trim() : DEFAULT_KEY;
+function isUsableConfigValue(val: string | undefined): boolean {
+  if (!val) return false;
+  const trimmed = val.trim();
+  return (
+    trimmed.length > 0 &&
+    trimmed !== 'https://your-project-id.supabase.co' &&
+    trimmed !== 'your-anon-or-publishable-key' &&
+    !trimmed.includes('your-project-id')
+  );
+}
+
+export const SUPABASE_URL = isUsableConfigValue(envUrl) ? envUrl!.trim() : DEFAULT_URL;
+export const SUPABASE_ANON_KEY = isUsableConfigValue(envKey) ? envKey!.trim() : DEFAULT_KEY;
 
 // Storage key tracking "Remember this device" preference
 const REMEMBER_PREF_KEY = 'saturn_remember_device';
@@ -35,6 +46,8 @@ export function getRememberDevicePreference(): boolean {
  * Custom storage adapter honoring the "Remember this device" setting.
  * When enabled: Auth tokens persist in localStorage across browser restarts.
  * When disabled: Auth tokens reside strictly in sessionStorage, clearing on tab/browser close.
+ * NOTE: PKCE flow and code-verifier keys MUST always reside in localStorage so that
+ * OAuth popup windows sharing the same origin can read the verifier to exchange codes.
  */
 const dynamicAuthStorage = {
   getItem: (key: string): string | null => {
@@ -49,6 +62,12 @@ const dynamicAuthStorage = {
   },
   setItem: (key: string, value: string): void => {
     try {
+      // PKCE verifiers must always be stored in localStorage so popups can read them
+      if (key.includes('verifier') || key.includes('flow')) {
+        localStorage.setItem(key, value);
+        return;
+      }
+
       const remember = getRememberDevicePreference();
       if (remember) {
         localStorage.setItem(key, value);
@@ -85,13 +104,15 @@ export function isSupabaseConfigured(): boolean {
 
 /**
  * Production-ready Supabase client
+ * Configured with flowType: 'pkce' and manual session detection (detectSessionInUrl: false)
+ * to avoid duplicate token exchange race conditions.
  */
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     storage: dynamicAuthStorage,
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     flowType: 'pkce'
   }
 });

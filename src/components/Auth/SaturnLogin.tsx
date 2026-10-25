@@ -11,9 +11,15 @@ interface FormErrors {
   confirmPassword?: string;
 }
 
-export function SaturnLogin() {
+export interface SaturnLoginProps {
+  isFadingOut?: boolean;
+}
+
+export function SaturnLogin({ isFadingOut = false }: SaturnLoginProps = {}) {
   const {
     isRecoveryMode,
+    oauthError,
+    clearOAuthError,
     signInWithEmail,
     signUpWithEmail,
     signInWithGoogle,
@@ -53,6 +59,14 @@ export function SaturnLogin() {
       setApiError(null);
     }
   }, [isRecoveryMode]);
+
+  useEffect(() => {
+    if (oauthError) {
+      setApiError(oauthError);
+      setIsLoading(false);
+      clearOAuthError();
+    }
+  }, [oauthError, clearOAuthError]);
 
   const validateField = (field: string, value: string): string | undefined => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -211,7 +225,13 @@ export function SaturnLogin() {
     try {
       const { error } = await signInWithGoogle();
       if (error) {
-        setApiError(error.message || 'Google OAuth could not be initiated. Check Supabase Provider configuration.');
+        if (error.name === 'PopupBlockedError') {
+          setApiError('Popup was blocked by your browser. Please allow popups for SATURN in your browser bar, or open the app in a standalone tab.');
+        } else if (error.message.toLowerCase().includes('provider') || error.message.toLowerCase().includes('not enabled')) {
+          setApiError('Google OAuth is not enabled in your Supabase project. Enable the Google provider in Supabase Dashboard -> Authentication -> Providers.');
+        } else {
+          setApiError(error.message || 'Google OAuth could not be initiated. Check Supabase Provider configuration.');
+        }
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Google OAuth failed';
@@ -225,7 +245,7 @@ export function SaturnLogin() {
     <>
       {/* SaturnToast component providing accessible feedback */}
       <SaturnToast
-        isOpen={toastConfig.isOpen}
+        isOpen={toastConfig.isOpen && !isFadingOut}
         heading={toastConfig.heading}
         supportingText={toastConfig.supportingText}
         type={toastConfig.type}
@@ -233,7 +253,7 @@ export function SaturnLogin() {
       />
 
       {/* Main Centered Login Screen with responsive padding and scroll allowance */}
-      <div className="fixed inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+      <div className={`fixed inset-0 pointer-events-none z-20 flex items-center justify-center p-4 sm:p-6 overflow-y-auto transition-opacity duration-500 ease-out ${isFadingOut ? 'opacity-0' : 'opacity-100'}`}>
         <div className="pointer-events-auto relative w-full max-w-[416px] my-auto">
           {/* Liquid Glass Card Container */}
           <div className="relative rounded-2xl saturn-login-card px-6 py-7 sm:px-8 sm:py-8 transition-all duration-300">

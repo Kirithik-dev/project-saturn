@@ -22,7 +22,12 @@ import { terrainVertexShader, terrainFragmentShader } from './terrainShaders';
 import { embersVertexShader, embersFragmentShader } from './embersShader';
 import { WaveVariationBlender } from './terrainVariations';
 
-export const ParticleLandscape: React.FC = () => {
+export interface ParticleLandscapeProps {
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+export const ParticleLandscape: React.FC<ParticleLandscapeProps> = ({ className = '', style }) => {
   const mountRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -421,8 +426,8 @@ export const ParticleLandscape: React.FC = () => {
   return (
     <div
       ref={mountRef}
-      className="fixed inset-0 w-full h-full overflow-hidden bg-[#0A0605]"
-      style={{ touchAction: 'none' }}
+      className={`absolute inset-0 w-full h-full overflow-hidden bg-[#0A0605] ${className}`}
+      style={{ touchAction: 'none', ...style }}
     />
   );
 };
